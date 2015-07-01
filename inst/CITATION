@@ -1,0 +1,40 @@
+
+citHeader("To cite mpwgaim (TAG article) or mvmpwgaim (G3 article) in
+           publications use the relevant reference below:")
+
+citEntry(entry="Article",
+	 title = "Whole-genome QTL analysis for MAGIC.",
+         author = personList(as.person("A.P. Verbyla"), 
+                             as.person("A.W. George"),
+                             as.person("C.R. Cavanagh"), 
+                             as.person("K.L. Verbyla")),
+	 journal = "Theoretical and Applied Genetics",
+  	 year = "2014",
+	 volume = "127",
+	 number = "8",         
+	 pages = "1753-1770",
+         textVersion = 
+         paste("Verbyla, A. P., George, A. W., Cavanagh, C. R., & Verbyla, K. L.",
+               "(2014).",
+               "Whole-genome QTL analysis for MAGIC.",
+               "Theoretical and Applied Genetics,",
+               "127(8), 1753-1770.")
+         )
+
+citEntry(entry="Article",
+ 	 title = "Whole-Genome Analysis of Multienvironment or Multitrait QTL in MAGIC.",
+         author = personList(as.person("A.P. Verbyla"), 
+                             as.person("C.R. Cavanagh"), 
+                             as.person("K.L. Verbyla")),
+	 journal = "G3: Genes| Genomes| Genetics,",
+  	 year = "2014",
+	 volume = "4",
+	 number = "9",         
+	 pages = "1569-1584",
+         textVersion = 
+         paste("Verbyla, A. P., Cavanagh, C. R., & Verbyla, K. L.",
+         "(2014).",
+         "Whole-Genome Analysis of Multienvironment or Multitrait QTL in MAGIC.",
+         "G3: Genes| Genomes| Genetics,",
+         "4(9), 1569-1584.")
+         )

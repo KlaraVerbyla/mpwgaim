@@ -1,0 +1,20 @@
+Package: mpwgaim
+Type: Package
+Title: Multi-Parent Whole Genome Average Interval Mapping for QTL detection
+    using mixed models
+Version: 0.1.1
+Date: 2014-10-24
+Author: Ari Verbyla <ari.verbyla@csiro.au> and Klara Verbyla
+    <klara.verbyla@csiro.au>
+Maintainer: Ari Verbyla <Ari.Verbyla@csiro.au>
+Description: This package provides tools for constucting marker-based
+    objects to be used in QTL analysis for multi-parent advanced
+    inter-cross (MAGIC) populations (classic 4-way or 8-way) and a
+    whole genome approach to detecting putative QTL using
+    probabilities of inheriting founder alleles.
+License: GPL-3 + file LICENSE
+SystemRequirements: asreml-R 3.x
+LazyData: yes
+ByteCompile: yes
+Imports:
+    lattice,MASS,asreml,mpMap,wgaim

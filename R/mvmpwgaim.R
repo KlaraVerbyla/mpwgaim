@@ -1,0 +1,212 @@
+## Generic mvmpwgaim
+##
+##' Multivariate (multi-trait or multi-environment) QTL analysis for
+##' multi-parent populations
+##'
+##' This function allows either a multi-trait or multi-environment QTL
+##' analysis to be carried out.  Note that the current code does not
+##' allow multiple traits and multiple environments in the same
+##' analysis.  Two base models are required.  In the first, the
+##' polygenic effect MUST have a diagonal structure for the trait or
+##' environment variable, while in the second the polygenic effect
+##' MUST have a factor analytic structure for the trait or environment
+##' variable.  The diagonal form is used to establish if there is
+##' sufficient evidence to select a putative QTL while the factor
+##' analytic form is used both for selection and computation of impact
+##' of the QTL through probability measures, log probability measures
+##' and percentage variance accounted for by each QTL.
+##'
+##' For multi-environment analysis the logical argument main.effects
+##' should be set to \code{TRUE}.  This ensures the possibility of
+##' testing for environment by QTL interaction (see \code{remlrt}).
+##'
+##' Analysis using this function is both time consuming and
+##' computationally demanding.  To facilitate analyses that take along
+##' time, there is a logical variable that can be set, dorestart.  If
+##' this argument is set to \code{TRUE}, a list of structures is saved
+##' to file after each selection of a QTL.  If the analysis terminates
+##' prematurely, this saved file can be used as input in a subsequent
+##' run of the analysis through the restart argument.  The name of the
+##' file saved is \code{"restart.RData"} and this should be the
+##' argument in a subsequent call to \code{mvmpwgaim}.
+##'
+##' @title QTL analysis for multivariate multi-parent data
+##' @param baseDiag A base model without marker based effects in
+##' which all genetic effects associated with the multivariate nature
+##' of the data are modelled using the 'diag' structure of 'asreml'
+##' (see Details and Examples).
+##' @param baseModel A base model without marker based effects in
+##' which all genetic effects associated with the multivariate nature
+##' of the data are modelled using the 'fa' structure of 'asreml'
+##' (see Details and Examples).
+##' @param \ldots Further arguments to be passed to the method
+##' \code{\link{mvmpwgaim.asreml}}.
+##' @return A list object that has class 'mvmpwgaim' as well as
+##' 'asreml'.  There is an additional list, \code{QTL}, which has
+##' many components with information on the multi-parent population,
+##' arguments set, QTL and diagnostics.
+##' @author Ari Verbyla (ari.verbyla at csiro.au) and Klara Verbyla
+##' (klara.verbyla at csiro.au)
+##' @references Verbyla, A. P., Cavanagh, C. C. and Verbyla,
+##' K. L. (2014). Whole genome analysis of multi-environment or
+##' multi-trait QTL in MAGIC.  Genes, Genomes, Genetics.
+##' @export
+##' @examples
+##' \dontrun{
+##' ## Simulation of genetic and phenotypic data for analysis
+##' require(asreml)
+##' require(mpMap)
+##' require(qtl)
+##' ## Generate a linkage map
+##' map <- sim.map(len=rep(200,7), n.mar=rep(51,7), eq.spacing=TRUE, include.x=FALSE)
+##' ## Set up a pedigree  for a 4-way cross with 500 RILs and 6 generations of selfing
+##' sim.ped <- sim.mpped(4, 1, 500, 6, 1)
+##' ## Dummy QTL structure
+##' qtl.mat <- matrix(data=c(1, 142, 0.354, -0.354, -0.354,  0.354,
+##'                          2, 162, 0.354, -0.354, -0.354, -0.354,
+##'                          5, 78, 0.354, -0.354, -0.354, 0.354),
+##'                          nrow=3, ncol=6, byrow=TRUE)
+##' ## Simulate mpcross object
+##' sim.dat <- sim.mpcross(map=map, pedigree=sim.ped,
+##'                        qtl=qtl.mat, seed=5)
+##' mpSim <- maporder(sim.dat)
+##' ## Create interval objects (see mpcross2int)
+##' mpInterval <- mpcross2int(mpSim, gen.type="mpInterval")
+##' mpMarker <- mpcross2int(mpSim, gen.type="mpMarker")
+##' ##  Model matrix for computing the contribution of the QTL
+##' nqtl.col <- dim(sim.dat$qtlgeno$finals)[2]
+##' mmat <- matrix(nrow=500, ncol=4*nqtl.col/2)
+##' for (ii in 1:(nqtl.col/2)) {
+##' qtl.fac <- factor(sim.dat$qtlgeno$finals[,ii])
+##' mmat[,(4*ii-3):(4*ii)] <- model.matrix(~qtl.fac - 1)
+##' }
+##' ##  Effects for each environment
+##' ## Environment 1
+##' qtl.mat1 <- matrix(data=c(1, 142, 0.354, -0.354, -0.354, 0.354,
+##'                           2, 162, 0.354, -0.354, -0.354, 0.354,
+##'                           5, 78, 0.354, -0.354, -0.354, 0.354),
+##'                           nrow=3, ncol=6, byrow=TRUE)
+##' qtl.sizes1 <- as.vector(t(qtl.mat1[,3:6]))
+##' qtl.effect1 <- mmat %*% qtl.sizes1
+##' ## Environment 2
+##' qtl.mat2 <- matrix(data=c(1, 142, 0.354, -0.354, -0.354, 0.354,
+##'                           2, 162, 0.354, -0.354, -0.354, 0.354,
+##'                           5, 78, 0, 0, 0, 0),
+##'                           nrow=3, ncol=6, byrow=TRUE)
+##' qtl.sizes2 <- as.vector(t(qtl.mat2[,3:6]))
+##' qtl.effect2 <- mmat %*% qtl.sizes2
+##' ## Environment 3
+##' qtl.mat3 <- matrix(data=c(1, 142, 0.354, -0.354, -0.354, 0.354,
+##'                           2, 162, -0.354, 0.354, 0.354, -0.354,
+##'                           5, 78, 0.354, -0.354, -0.354, 0.354),
+##'                           nrow=3, ncol=6, byrow=TRUE)
+##' qtl.sizes3 <- as.vector(t(qtl.mat3[,3:6]))
+##' qtl.effect3 <- mmat %*% qtl.sizes3
+##' ## Polygenic variance
+##' pvar_0.5
+##' ## Function to calculate approximate percentage variance for each QTL
+##' perc.var <- function(qtl.mat, poly.var) {
+##'    nfounders <- dim(qtl.mat)[2]-2
+##'    prob <- 1/nfounders
+##'    varq <- diag(rep(prob,nfounders)) - rep(prob,nfounders) %*% t(rep(prob,nfounders))
+##'    gvar <- apply(qtl.mat[, -c(1,2)], 1, function(el, varq) sum((el %*% varq) * el), varq)
+##'    totvar <- sum(gvar)+pvar
+##'    perc.var <- 100*gvar/totvar
+##'    round(perc.var,1)
+##' }
+##' ## Percentage variance for each QTL in each environment
+##' ## Environment 1
+##' percvar1 <- perc.var(qtl.mat1, pvar)
+##' percvar1
+##' ## Environment 2
+##' percvar2 <- perc.var(qtl.mat2, pvar)
+##' percvar2
+##' ## Environment 3
+##' percvar3 <- perc.var(qtl.mat3, pvar)
+##' percvar3
+##' ## Setup simulated data for analysis
+##' ntrait <- 3
+##' ngeno <- 500
+##' nrep <- 2
+##' Trait <- factor(rep(rep(1:ntrait, ngeno), nrep))
+##' gvar <- matrix(c(1.0,0.9,0.7,
+##'                  0.9,1.0,0.7,
+##'                  0.7,0.7,1.0), ncol=3)
+##' gchol <- t(chol(gvar))
+##' id <- factor(rep(rep(paste0("L", 1:ngeno),each=ntrait),nrep))
+##' pheno.data <- data.frame(y = 0, Trait=Trait, Rep=nrep, id=id)
+##' qtleffects <- as.matrix(0, ncol=1, nrow=ntrait*ngeno)
+##' qtleffects[rep(1:3,ngeno)==1] <- qtl.effect1
+##' qtleffects[rep(1:3,ngeno)==2] <- qtl.effect2
+##' qtleffects[rep(1:3,ngeno)==3] <- qtl.effect3
+##' set.seed(10)
+##' ee <- rnorm(ntrait*ngeno*nrep,0,1)
+##' geno <- rnorm(ntrait*ngeno,0,1)
+##' uu <- as.vector(gchol%*%matrix(geno, nrow=ntrait))
+##' pheno.data$y <- rep(c(9,10,12), ngeno*nrep)+
+##'     qtleffects + sqrt(1/2)*c(uu,uu) + ee
+##' ord <- order(pheno.data$Trait)
+##' pheno.data<-pheno.data[ord,]
+##' ## Multi-environment analysis
+##' ## Multi-environment preliminary models
+##' test.asr0 <- asreml(y ~ Trait - 1, random = ~ diag(Trait):id, data=pheno.data)
+##' test.asr1 <- asreml(y ~ Trait - 1, random = ~ fa(Trait,1):id, data=pheno.data)
+##' ##  MVMPWGAIM analysis
+##' test.qtl <- mvmpwgaim(test.asr0, test.asr1, pheno.data, mpInterval, merge.by = "id",
+##'                       Trait="Trait", verboseLev=0, main.effects = TRUE,
+##'                       data.name = "mvy.data", gen.type="interval", na.method.X='include',
+##'                       workspace=4e7, pworkspace=4e7)
+##' ## Check for Trait by QTL interactions and fit a reduced model if needed
+##' test.aqtl <- remlrt.mvmpwgaim(test.qtl, mvy.data, TypeI=0.05)
+##' ##  Summary for MVMPWGAIM analysis
+##' test.summ <- summary(test.aqtl, mpInterval)
+##' test.summ
+##' }
+##'
+mvmpwgaim <- function(baseDiag, baseModel, ...) {
+  UseMethod("mvmpwgaim")
+}
+
+
+
+## @param phenoData Phenotypic data that includes all experimental
+## design and genetic line information that enables the base models
+## to be fitted.
+## @param intervalObj  An object of class 'interval'.
+## @param Trait A character vector that specifies the name of the
+## multivariate trait or environment variable in the phenotypic data.
+## @param merge.by A character vector that specifies the genetic
+## line variable that is present in both the phenotypic data and the
+## 'interval' object that is used in merging the two together.
+## @param gen.type A character vector indicating the type of
+## analysis to be undertaken.  Possible values are 'interval' (the
+## default) or 'marker'.
+## @param n.fa A number specifying the number of factors to be
+## included in the working model using founder probabilities.  The
+## default is 1 and the maximum is 2.  Note that the number can be
+## restricted by the number of traits or environments in the analysis.
+## @param TypeI The type I error rate for the forward selection of
+## putative QTL.  The default is 0.05.
+## @param attempts An integer representing the number of attempts at
+## convergence for the QTL model. The default is 5.
+## @param data.name A character vector specifying the name of the data
+## file to which the final data frame is to be saved.  If
+## \code{NULL}, the data frame is saved to the name of the response
+## dot data.
+## @param trace Logical for writing out debugging information.
+## Default is FALSE.
+## @param verboseLev An integer greater than 0 will result in
+## printing of outlier statistics in the QTL selection process.
+## @param main.effects Logical.  Should be \code{TRUE} for
+## multi-environment QTL analysis.  Otherwise the default is
+## \code{FALSE}.
+## @param restart A list with objects that allow the QTL analysis to
+## restart from the last successful QTL selection (see Details).
+## @param dorestart Logical.  Default is \code{FALSE}.  If
+## \code{TRUE}, the components required for a restart are saved after
+## each selection of a putative QTL.  This allows the process to be
+## restarted in the event that computational or time limits are
+## reached in the current analysis.
+## @param ... Additional objects that can be passed to functions, for
+## example 'asreml'.
+
