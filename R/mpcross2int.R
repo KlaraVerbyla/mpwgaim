@@ -197,6 +197,7 @@ mpcross2int <- function(mpcross, gen.type="mpMarker", method = "qtl",
                 cc.count <- cc.count+1
                 cat(" Linkage group ", cc, "\n")
                 exp.prob <- mpprob(mpcross, chr = cc, program="qtl", step=step)$prob
+                if(!class(dimnames(exp.prob[[cc]])[[2]]) == "character") dimnames(exp.prob[[cc]])[[2]] <- as.character(dimnames(exp.prob[[cc]])[[2]])
                 name.prob <- unlist(lapply(strsplit(dimnames(exp.prob[[cc]])[[2]], split=","), function(el) el[1]))
                 spl.prob <- unique(name.prob)
                 which.loc <- substr(spl.prob, start=1, stop=3) == "loc"
