@@ -54,7 +54,7 @@ mvmp.pick <- function(asr, intervalObj, asdata, gen.type, state, labels,
 
     if(n.trait != 2) {
         pv <- predict(asr, classify = paste(labels[1], labels[2], sep=":"),
-                      only = paste("fa(",labels[1], ", ", n.fa, "):", labels[2], sep=""),
+                      only = paste("fa(",labels[1], ", ", n.fa, "):", 'grp(\"', labels[2], '\")', sep=""),
                       levels=qlist, vcov=TRUE, maxiter = 1, data = asdata)
         if(debug) {
             print(pv$gammas)
