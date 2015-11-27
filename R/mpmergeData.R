@@ -17,8 +17,7 @@
 mpmergeData <- function (phenoData, geneticData, by) {
     int.cnt <- 2:dim(geneticData)[2]
     p <- length(int.cnt)
-    whg <- !duplicated(phenoData[, by])
-    whg <- geneticData[, by] %in% phenoData[whg, by]
+    whg <- geneticData[[by]] %in% unique(phenoData[[by]])
     ids <- as.character(geneticData[whg, by])
     q <- length(ids)
     phenoData <- cbind(ord = 1:nrow(phenoData), phenoData)
