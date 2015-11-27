@@ -316,7 +316,7 @@ mvmpwgaim.asreml <-
         qtlDiag <- updateMPWgaim(qtlDiag, asdata, attempts, random. = new.form, ...)
         LRT[which.i] <- 2*(qtlDiag$loglik - baseDiag$loglik)
         pvalue[which.i] <- 1-pchisq.mixture(LRT[which.i], ntrait=n.trait)
-        if(pvalue[which.i] < 0) pvalue <- 0
+        if(pvalue[which.i] < 0) pvalue[which.i] <- 0
         dmat[which.i, ] <- c(baseDiag$loglik, qtlDiag$loglik, LRT[which.i],
                              pvalue[which.i])
         cat("\nLikelihood Ratio Test Statistic: ", LRT[which.i], ", P-value: ", pvalue[which.i],"\n")
