@@ -150,14 +150,13 @@ mpwgaim.asreml <- function(baseModel, phenoData, intervalObj, merge.by = NULL,
 ##    require(wgaim) delete - ABZ
     if (is.null(merge.by))
         stop("Need name of matching column to merge datasets.")
-    if (is.null(other <- intervalObj$pheno[, merge.by]))
+    if (is.null(other <- intervalObj$pheno[[merge.by]]))
         stop("Genotypic data does not contain column \"", merge.by,
             "\".")
     if (is.null(phenoData[, merge.by]))
         stop("Phenotypic data does not contain column \"", merge.by,
             "\".")
-    mby <- pmatch(as.character(other), as.character(phenoData[,
-        merge.by]))
+    mby <- pmatch(as.character(other), as.character(phenoData[[merge.by]]))
     if (all(is.na(mby)))
         stop("Names in Genotypic \"", merge.by, "\" column do not match any
 names in Phenotypic \"",
