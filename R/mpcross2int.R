@@ -1,19 +1,19 @@
 ## Function mpcross2int
 ##
 ##' Converts an object of class \code{"mpcross"} to an object with
-##' class \code{"interval"}.
+##' class \code{"mpInterval"}.
 ##'
 ##' This function provides the conversion of genetic data object of
 ##' class \code{"mpcross"} from the \pkg{mpMap} package to an
-##' \code{"interval"} object that is ready to use with \pkg{mpwgaim}
+##' \code{"mpInterval"} object that is ready to use with \pkg{mpwgaim}
 ##' QTL analysis functions.
 ##'
-##' @title Convert an mpcross object to an interval object
+##' @title Convert an mpcross object to an mpInterval object
 ##' @param mpcross An \code{mpcross} object generated for example
 ##' using the \pkg{mpMap} package.
 ##' @param gen.type Founder probabilities found for intervals on the
-##' linkage map using \code{"interval"} or markers using
-##' \code{"marker"}.  Default is \code{"interval"}.
+##' linkage map using \code{"mpInterval"} or markers using
+##' \code{"mpMarker"}.  Default is \code{"mpMarker"}.
 ##' @param method Method for calculation of founder probabilities.
 ##' Default is \code{"qtl"} to use Hidden Markov Models in the
 ##' \pkg{qtl} package.  The alternative is \code{"3pt"} to use
@@ -27,7 +27,7 @@
 ##' other current option is \code{"8way"}).
 ##' @param debug Logical (default is \code{FALSE}) to determine if
 ##' printing is to be enabled in debugging the function
-##' @return An interval object (list) suitable for QTL analysis using
+##' @return An mpInterval object (list) suitable for QTL analysis using
 ##' mpwgaim.  The list contains the following components:
 ##' \itemize{
 ##' \item \code{geno} : A list with elements named after the
@@ -83,6 +83,8 @@ mpcross2int <- function(mpcross, gen.type="mpMarker", method = "qtl",
                         step = 0.1, population = "4way", debug=FALSE) {
     if(!any(class(mpcross) == "mpcross"))
         stop(" Argument is not an mpcross object\n")
+    if(!gen.type %in% c("mpMarker", "mpInterval"))
+        stop("gen.type needs to be either mpMarker or mpInterval")
     nfounders <- dim(mpcross$founders)[1]
     ngeno <- length(mpcross$map)
 ##    require(mpMap)  delete - ABZ
