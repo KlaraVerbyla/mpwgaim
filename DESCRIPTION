@@ -17,4 +17,6 @@ SystemRequirements: asreml-R 3.x
 LazyData: yes
 ByteCompile: yes
 Imports:
-    lattice,MASS,asreml,mpMap,wgaim
+    lattice,MASS,mpMap,wgaim
+Suggests:
+    asreml
